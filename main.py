@@ -2,13 +2,12 @@ import logging
 import simpy
 import numpy as np
 import matplotlib.pyplot as plt
+import networkx as nx
 from src.models.pipeline import Pipeline
 from src.models.refinery import Refinery
 from src.visualizacao import plot_fluxo_tempo
-from src.otimizacao import Grafo  # Importando o algoritmo A*
 from src.simulacao import Simulacao
 from matplotlib.backends.backend_pdf import PdfPages
-import random
 
 logger = logging.getLogger(__name__)
 
@@ -58,19 +57,14 @@ def simular_fluxo(usar_simpy=True):
     ax2.set_title("Distribuição de Produtos Refinados")
     ax2.grid(axis="y")
 
-    # 🔹 Criando a estrutura do Grafo para otimizar as rotas de transporte
-    grafo = Grafo()
-    grafo.adicionar_no("Refinaria_A")
-    grafo.adicionar_no("Refinaria_B")
-    grafo.adicionar_no("Porto")
-    grafo.adicionar_no("Distribuidora")
+    # 🔹 Criando a estrutura do Grafo com NetworkX
+    grafo = nx.DiGraph()
+    grafo.add_edge("Refinaria_A", "Porto", custo=5, capacidade=80)
+    grafo.add_edge("Porto", "Distribuidora", custo=7, capacidade=60)
+    grafo.add_edge("Refinaria_B", "Porto", custo=4, capacidade=70)
+    grafo.add_edge("Refinaria_B", "Distribuidora", custo=10, capacidade=90)
 
-    grafo.adicionar_aresta("Refinaria_A", "Porto", custo=5, distancia=10, capacidade=80)
-    grafo.adicionar_aresta("Porto", "Distribuidora", custo=7, distancia=20, capacidade=60)
-    grafo.adicionar_aresta("Refinaria_B", "Porto", custo=4, distancia=15, capacidade=70)
-    grafo.adicionar_aresta("Refinaria_B", "Distribuidora", custo=10, distancia=25, capacidade=90)
-
-    melhor_rota = grafo.a_star("Refinaria_A", "Distribuidora")
+    melhor_rota = nx.shortest_path(grafo, source="Refinaria_A", target="Distribuidora", weight="custo")
     logger.info(f"📍 Melhor Rota para transporte de petróleo: {melhor_rota}")
     
     if usar_simpy:
@@ -83,7 +77,6 @@ def simular_fluxo(usar_simpy=True):
         env.run(until=50)  # Tempo da simulação
 
         simulacao.gerar_grafico_fluxo()  # Mostra o gráfico com falhas após a simulação
-
 
     # 🔹 Salvando os gráficos em PDF
     with PdfPages("graficos_fluxo_petroleo.pdf") as pdf:

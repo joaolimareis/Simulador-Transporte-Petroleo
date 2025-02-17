@@ -1,14 +1,30 @@
-import random
-import numpy as np
-import simpy
+import networkx as nx
 import matplotlib.pyplot as plt
+import simpy
+import random
 
 class Simulacao:
     def __init__(self, env, grafo):
         self.env = env
         self.grafo = grafo
-        self.historico_fluxo = []
+        self.historico_fluxo = []  # 🔹 Adicionando o atributo
         self.tempo_falhas = []
+
+    def _criar_grafo(self):
+        """Cria um grafo direcionado representando a rede de transporte de petróleo."""
+        # Adicionando nós (refinarias, portos, distribuidores)
+        self.grafo.add_nodes_from(["Refinaria_A", "Refinaria_B", "Porto", "Distribuidora"])
+
+        # Adicionando arestas com custo e capacidade
+        self.grafo.add_edge("Refinaria_A", "Porto", custo=5, capacidade=80)
+        self.grafo.add_edge("Porto", "Distribuidora", custo=7, capacidade=60)
+        self.grafo.add_edge("Refinaria_B", "Porto", custo=4, capacidade=70)
+        self.grafo.add_edge("Refinaria_B", "Distribuidora", custo=10, capacidade=90)
+
+    def encontrar_melhor_rota(self, origem, destino):
+        """Encontra a melhor rota entre dois pontos usando Dijkstra."""
+        melhor_rota = nx.shortest_path(self.grafo, source=origem, target=destino, weight="custo")
+        return melhor_rota
 
     def transportar_petroleo(self, origem, destino):
         """Simula o transporte de petróleo entre dois pontos usando SimPy."""
@@ -40,19 +56,28 @@ class Simulacao:
             self.historico_fluxo.append((self.env.now, fluxo))
 
     def gerar_grafico_fluxo(self):
-        """Gera um gráfico mostrando o impacto das falhas no fluxo de petróleo."""
-        tempos, fluxos = zip(*self.historico_fluxo)  
+        """Gera um gráfico mostrando a variação do fluxo durante a simulação."""
+        if not self.historico_fluxo:
+            print("⚠️ Nenhum dado de fluxo registrado durante a simulação.")
+            return
+        
+        tempos, fluxos = zip(*self.historico_fluxo)
+        plt.figure(figsize=(8, 5))
+        plt.plot(tempos, fluxos, 'r-o', label="Fluxo de Petróleo")
+        plt.xlabel("Tempo (unidades de simulação)")
+        plt.ylabel("Fluxo (barris/hora)")
+        plt.title("Variação do Fluxo de Petróleo com Falhas")
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
+    def desenhar_grafo(self):
+        """Gera uma visualização do grafo."""
+        pos = nx.spring_layout(self.grafo)
+        labels = {(u, v): f"Custo: {d['custo']}" for u, v, d in self.grafo.edges(data=True)}
 
         plt.figure(figsize=(8, 5))
-        plt.plot(tempos, fluxos, 'r-', label="Fluxo com falhas")
-
-        # Adiciona marcação das falhas
-        for t in self.tempo_falhas:
-            plt.axvline(x=t, color='black', linestyle='--', alpha=0.7, label="Falha")
-
-        plt.xlabel("Tempo (horas)")
-        plt.ylabel("Fluxo de petróleo (m³/h)")
-        plt.title("Impacto das Falhas no Fluxo de Petróleo")
-        plt.legend()
-        plt.grid()
+        nx.draw(self.grafo, pos, with_labels=True, node_color='skyblue', edge_color='gray', node_size=2000, font_size=10)
+        nx.draw_networkx_edge_labels(self.grafo, pos, edge_labels=labels)
+        plt.title("Mapa das Rotas de Transporte de Petróleo")
         plt.show()
