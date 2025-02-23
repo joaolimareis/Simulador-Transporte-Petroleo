@@ -2,4 +2,4 @@ simpy
 numpy
 matplotlib
 networkx
-pandas
+
