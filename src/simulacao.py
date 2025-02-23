@@ -56,20 +56,20 @@ class Simulacao:
             self.historico_fluxo.append((self.env.now, fluxo))
 
     def gerar_grafico_fluxo(self):
-        """Gera um gráfico mostrando a variação do fluxo durante a simulação."""
         if not self.historico_fluxo:
             print("⚠️ Nenhum dado de fluxo registrado durante a simulação.")
-            return
-        
+            return None
+
         tempos, fluxos = zip(*self.historico_fluxo)
-        plt.figure(figsize=(8, 5))
-        plt.plot(tempos, fluxos, 'r-o', label="Fluxo de Petróleo")
-        plt.xlabel("Tempo (unidades de simulação)")
-        plt.ylabel("Fluxo (barris/hora)")
-        plt.title("Variação do Fluxo de Petróleo com Falhas")
-        plt.legend()
-        plt.grid(True)
-        plt.show()
+        fig, ax = plt.subplots(figsize=(8, 5))
+        ax.plot(tempos, fluxos, 'r-o', label="Fluxo de Petróleo com Falhas")
+        ax.set_xlabel("Tempo (unidades de simulação)")
+        ax.set_ylabel("Fluxo (barris/hora)")
+        ax.set_title("Variação do Fluxo de Petróleo")
+        ax.legend()
+        ax.grid(True)
+
+        return fig  # Retorna a figura
 
     def desenhar_grafo(self):
         """Gera uma visualização do grafo."""

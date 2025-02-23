@@ -82,7 +82,7 @@ def simular_fluxo(usar_simpy=True):
     with PdfPages("graficos_fluxo_petroleo.pdf") as pdf:
         pdf.savefig(fig1)  # Gráfico de fluxo
         pdf.savefig(fig2)  # Gráfico de produtos refinados
-    
+
     plt.show()
     print("✅ Simulação e otimização concluídas!")
 
